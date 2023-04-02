@@ -7,6 +7,7 @@ import { init } from './cli/commands/init/index.js';
 import { estimate } from './cli/commands/estimate/index.js';
 import { index } from './cli/commands/index/index.js';
 import { query } from './cli/commands/query/index.js';
+import { learn } from './cli/commands/learning/index.js';
 import { AutodocRepoConfig, AutodocUserConfig } from './types.js';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
@@ -135,6 +136,44 @@ program
           await fs.readFile(userConfigFilePath, 'utf8'),
         );
         query(repoConfig, userConfig);
+      } catch (e) {
+        console.error('Failed to config file. Did you run `doc init`?');
+        console.error(e);
+        process.exit(1);
+      }
+    }
+  });
+
+  program
+  .command('l')
+  .description('Query an Autodoc index')
+  .action(async () => {
+    let repoConfig: AutodocRepoConfig;
+    try {
+      repoConfig = JSON.parse(
+        await fs.readFile('./autodoc.config.json', 'utf8'),
+      );
+    } catch (e) {
+      console.error(
+        'Failed to find `autodoc.config.json` file. Did you run `doc init`?',
+      );
+      console.error(e);
+      process.exit(1);
+    }
+
+    try {
+      const userConfig: AutodocUserConfig = JSON.parse(
+        await fs.readFile(userConfigFilePath, 'utf8'),
+      );
+
+      learn(repoConfig, userConfig);
+    } catch (e) {
+      try {
+        await user();
+        const userConfig: AutodocRepoConfig = JSON.parse(
+          await fs.readFile(userConfigFilePath, 'utf8'),
+        );
+        learn(repoConfig, userConfig);
       } catch (e) {
         console.error('Failed to config file. Did you run `doc init`?');
         console.error(e);
